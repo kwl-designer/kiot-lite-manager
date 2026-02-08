@@ -6,15 +6,28 @@
 - 设备上传设备id和ip、时间戳
 - 服务器将数据存入redis供其他服务获取
 
+使用前提：已经在本地或者服务器上安装好了mqtt broker，如mosquitto
 
 ## 服务器管理
 
+依赖`requirements.txt`
+```shell
+pip install -r requirements.txt
+```
+
+运行：
 ```shell
 python mqtt_serv.py
 ```
 
 ## 设备管理
 
+依赖`requirements-device.txt`
+```shell
+pip install -r requirements-device.txt
+```
+
+运行：
 ```shell
 python mqtt_device.py
 ```
