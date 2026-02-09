@@ -23,3 +23,6 @@ class Config:
 
     def get_dns_ip(self):
         return self.config.get('network', 'dns_ip')
+
+    def get_ip_get_host(self):
+        return self.config.get('network', 'ip_get_host')

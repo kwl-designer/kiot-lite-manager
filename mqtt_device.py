@@ -1,8 +1,6 @@
 from core.MQTTDevice import MQTTDevice
 from core.Config import Config
 
-broker_host = "111.230.204.179"
-
 if __name__ == "__main__":
 
     config = Config('config.conf')
@@ -12,6 +10,7 @@ if __name__ == "__main__":
         port=config.get_broker_port(),
         username=config.get_broker_username(),
         password=config.get_broker_password(),
-        ip_dns=config.get_dns_ip()
+        ip_dns=config.get_dns_ip(),
+        ip_get_host=config.get_ip_get_host()
     )
     publisher.start(interval=30)

@@ -2,10 +2,12 @@ import paho.mqtt.client as mqtt
 import json
 import time
 import socket
+from .IPManager import IPManager
 
 class MQTTDevice:
     def __init__(self, device_id, broker='localhost', port=1883,
-                 username=None, password=None, ip_dns = '8.8.8.8'):
+                 username=None, password=None, ip_dns = '8.8.8.8',
+                 ip_get_host='http://myip.ipip.net/json'):
         self.device_id = device_id
         self.broker = broker
         self.port = port
@@ -21,8 +23,11 @@ class MQTTDevice:
         if username and password:
             self.client.username_pw_set(username, password)
 
+        # ip管理器，初始化一次
+        self.ipManager = IPManager(ip_get_host)
 
-    def get_ip(self):
+
+    def get_local_ip(self):
         """获取本机IP地址"""
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
@@ -46,9 +51,20 @@ class MQTTDevice:
             print("未连接，跳过本次发布")
             return
 
+        if self.ipManager.read() is None:
+            self.ipManager.fetch_and_save()
+
+        now = int(time.time())
+
+        # 如果IP地址存在且距离获取时间超过2小时，则重新获取
+        if self.ipManager.get_ip_time() is not None:
+            if now - self.ipManager.get_ip_time() > 3600 * 2:
+                self.ipManager.fetch_and_save()
+
         data = {
-            "ip": self.get_ip(),
-            "timestamp": int(time.time())
+            "local_ip": self.get_local_ip(),
+            "timestamp": now,
+            "public_ip": self.ipManager.read()
         }
         payload = json.dumps(data)
         result = self.client.publish(self.topic, payload)
