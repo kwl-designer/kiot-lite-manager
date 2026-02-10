@@ -8,7 +8,7 @@ class MQTTSubscriber:
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
         # 如果有用户名密码
-        if username and password:
+        if username and password and username != '' and password != '':
             self.client.username_pw_set(username, password)
 
         self.client.on_connect = self.on_connect

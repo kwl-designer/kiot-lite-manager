@@ -22,7 +22,7 @@ class MQTTDevice:
         self.client.on_message = self.on_message
 
         # 如果有用户名密码
-        if username and password:
+        if username and password and username != '' and password != '':
             self.client.username_pw_set(username, password)
 
         # ip管理器，初始化一次
