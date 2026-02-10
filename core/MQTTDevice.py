@@ -12,12 +12,14 @@ class MQTTDevice:
         self.broker = broker
         self.port = port
         self.topic = f"device/{device_id}/status"
+        self.sub_topic = f"device/{device_id}/cmd"
         self.connected = False
         self.ip_dns = ip_dns
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
+        self.client.on_message = self.on_message
 
         # 如果有用户名密码
         if username and password:
@@ -39,11 +41,23 @@ class MQTTDevice:
 
     def on_connect(self, client, userdata, flags, reason_code, properties):
         print(f"连接成功，状态码: {reason_code}")
+        client.subscribe(self.sub_topic)
+        print(f"订阅主题: {self.sub_topic}")
         self.connected = True
 
     def on_disconnect(self, client, userdata, flags, reason_code, properties):
         print(f"连接断开，状态码: {reason_code}")
         self.connected = False
+
+    def on_message(self, client, userdata, msg):
+        topic = msg.topic
+        print(f"主题: {msg.topic}, 消息: {msg.payload.decode()}")
+        # 解析消息
+        data = json.loads(msg.payload.decode())
+        if data.get("cmd") == "refresh ip":
+            self.ipManager.fetch_and_save()
+            self.publish_once()
+
 
     def publish_once(self):
         """发布一次消息"""
