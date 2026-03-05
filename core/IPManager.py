@@ -46,7 +46,7 @@ class IPManager:
                 lines = f.read().strip().split('\n')
                 return {
                     'ip': lines[0],
-                    'get_time': lines[1] if len(lines) > 1 else None
+                    'get_time': int(lines[1]) if len(lines) > 1 else None
                 }
         except FileNotFoundError:
             print("IP文件不存在")
