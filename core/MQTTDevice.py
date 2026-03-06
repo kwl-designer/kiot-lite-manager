@@ -1,3 +1,5 @@
+import subprocess
+
 import paho.mqtt.client as mqtt
 import json
 import time
@@ -56,8 +58,30 @@ class MQTTDevice:
         data = json.loads(msg.payload.decode())
         if data.get("cmd") == "refresh ip":
             self.ipManager.fetch_and_save()
-            self.publish_once()
+        elif data.get("cmd") == "frp on":
+            self.frp_op(True)
+        elif data.get("cmd") == "frp off":
+            self.frp_op(False)
+        
+        self.publish_once()
 
+    def frp_op(self, op_active):
+        if op_active == True:
+            """启动服务（不抛异常）"""
+            result = subprocess.run(
+                ['systemctl', '--user', 'start', 'frp-client'],
+                capture_output=True,
+                text=True
+            )
+            return result.returncode == 0
+        else:
+            """停止服务（不抛异常）"""
+            result = subprocess.run(
+                ['systemctl', '--user', 'stop', 'frp-client'],
+                capture_output=True,
+                text=True
+            )
+            return result.returncode == 0
 
     def publish_once(self):
         """发布一次消息"""
@@ -75,10 +99,15 @@ class MQTTDevice:
             if now - self.ipManager.get_ip_time() > 3600 * 2:
                 self.ipManager.fetch_and_save()
 
+        # 判断frp状态
+        frp_active = subprocess.run(['systemctl', '--user', 'is-active', 'frp-client'], 
+                           capture_output=True, text=True).stdout.strip() == 'active'
+
         data = {
             "local_ip": self.get_local_ip(),
             "timestamp": now,
-            "public_ip": self.ipManager.read()
+            "public_ip": self.ipManager.read(),
+            "frp_active": frp_active
         }
         payload = json.dumps(data)
         result = self.client.publish(self.topic, payload)
